@@ -133,6 +133,7 @@ func Apply(prevRoot common.Hash, postRoot common.Hash, accounts map[common.Addre
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println(root.Hex())
 	if root != prevRoot {
 		return nil, fmt.Errorf("failed to revert state, want %#x, got %#x", prevRoot, root)
 	}

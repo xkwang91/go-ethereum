@@ -473,9 +473,9 @@ func dbPut(ctx *cli.Context) error {
 
 // dbDumpTrie shows the key-value slots of a given storage trie
 func dbDumpTrie(ctx *cli.Context) error {
-	if ctx.NArg() < 3 {
-		return fmt.Errorf("required arguments: %v", ctx.Command.ArgsUsage)
-	}
+	//if ctx.NArg() < 3 {
+	//	return fmt.Errorf("required arguments: %v", ctx.Command.ArgsUsage)
+	//}
 	stack, _ := makeConfigNode(ctx)
 	defer stack.Close()
 
@@ -487,8 +487,8 @@ func dbDumpTrie(ctx *cli.Context) error {
 
 	var (
 		state   []byte
-		storage []byte
-		account []byte
+		//storage []byte
+		//account []byte
 		start   []byte
 		max     = int64(-1)
 		err     error
@@ -497,14 +497,14 @@ func dbDumpTrie(ctx *cli.Context) error {
 		log.Info("Could not decode the state root", "error", err)
 		return err
 	}
-	if account, err = hexutil.Decode(ctx.Args().Get(1)); err != nil {
-		log.Info("Could not decode the account hash", "error", err)
-		return err
-	}
-	if storage, err = hexutil.Decode(ctx.Args().Get(2)); err != nil {
-		log.Info("Could not decode the storage trie root", "error", err)
-		return err
-	}
+	//if account, err = hexutil.Decode(ctx.Args().Get(1)); err != nil {
+	//	log.Info("Could not decode the account hash", "error", err)
+	//	return err
+	//}
+	//if storage, err = hexutil.Decode(ctx.Args().Get(2)); err != nil {
+	//	log.Info("Could not decode the storage trie root", "error", err)
+	//	return err
+	//}
 	if ctx.NArg() > 3 {
 		if start, err = hexutil.Decode(ctx.Args().Get(3)); err != nil {
 			log.Info("Could not decode the seek position", "error", err)
@@ -517,11 +517,12 @@ func dbDumpTrie(ctx *cli.Context) error {
 			return err
 		}
 	}
-	id := trie.StorageTrieID(common.BytesToHash(state), common.BytesToHash(account), common.BytesToHash(storage))
-	theTrie, err := trie.New(id, triedb)
+	//id := trie.StorageTrieID(common.BytesToHash(state), common.BytesToHash(account), common.BytesToHash(storage))
+	theTrie, err := trie.New(trie.TrieID(common.BytesToHash(state)), triedb)
 	if err != nil {
 		return err
 	}
+	//fmt.Println(theTrie.Size())
 	trieIt, err := theTrie.NodeIterator(start)
 	if err != nil {
 		return err
@@ -529,11 +530,16 @@ func dbDumpTrie(ctx *cli.Context) error {
 	var count int64
 	it := trie.NewIterator(trieIt)
 	for it.Next() {
+		address := rawdb.ReadPreimage(db,common.BytesToHash(it.Key))
+		if count % 10000 == 0 {
+			fmt.Println(count)
+			fmt.Println(common.BytesToAddress(address))
+		}
 		if max > 0 && count == max {
 			fmt.Printf("Exiting after %d values\n", count)
 			break
 		}
-		fmt.Printf("  %d. key %#x: %#x\n", count, it.Key, it.Value)
+		//fmt.Printf("  %d. key %#x: %#x\n", count, it.Key, it.Value)
 		count++
 	}
 	return it.Err

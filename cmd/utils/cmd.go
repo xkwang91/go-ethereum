@@ -29,6 +29,7 @@ import (
 	"strings"
 	"syscall"
 	"time"
+	"encoding/hex"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
@@ -364,11 +365,17 @@ func ExportPreimages(db ethdb.Database, fn string) error {
 	// Iterate over the preimages and export them
 	it := db.NewIterator([]byte("secure-key-"), nil)
 	defer it.Release()
-
+	w := bufio.NewWriter(fh)
 	for it.Next() {
-		if err := rlp.Encode(writer, it.Value()); err != nil {
+		//if err := rlp.Encode(writer, it.Value()); err != nil {
+		//	return err
+		//}
+		key := hex.EncodeToString(it.Key())
+		val := hex.EncodeToString(it.Value())
+		if _, err := w.WriteString(fmt.Sprintf("%v,%v\n",key,val)); err != nil {
 			return err
 		}
+
 	}
 	log.Info("Exported preimages", "file", fn)
 	return nil
